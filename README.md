@@ -1,0 +1,1 @@
+### Trying out few Inheritance patterns and equivalent implementation using Composition
