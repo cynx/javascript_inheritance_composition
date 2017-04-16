@@ -128,3 +128,78 @@ GrandchildObj.initChild('the King');
 GrandchildObj.initGranChild('Henry');
 
 console.log(GrandchildObj.printFullName());
+
+
+
+// # ES6 Classes - extends
+//----------------------------------
+//typeof ParentClass - 'function'
+class ParentClass{
+    constructor(parentName){
+        this.parentName = parentName;
+    }
+    printSurname(){
+        return this.parentName;
+    }
+}
+
+class ChildClass extends ParentClass{
+    constructor(parentName,childName){
+        super(parentName);
+        this.childName = childName;
+    }
+    printFullName(){
+        return this.childName + ' ' + this.parentName;
+    }
+}
+
+//ronny _proto_ is ChildCLass. ChildClass _proto_ is ParentClass
+var ronny = new ChildClass('Sax','Ash');
+console.log(ronny.printFullName());
+console.log(ronny.printSurname());
+
+
+// # Composition
+//----------------------------------
+// Inheritance - design around 'what they are' . Composition - design around 'what they do'.
+//https://medium.com/humans-create-software/composition-over-inheritance-cb6f88070205
+const label = (state) => ({
+    print: () => console.log(`${state.id}: This task is ${state.lb}`)
+});
+
+const sum = (state) => ({
+    generate: () => state.nums.reduce((a,b)=>a+b)
+});
+
+const mul = (state) => ({
+    generate: () => state.nums.reduce((a,b)=>a*b)
+});
+
+//usage
+const sumGenerator = (lb,nums) => {
+  let state = {
+      id:1,
+      lb,
+      nums
+  };
+
+  return Object.assign({},label(state),sum(state));
+};
+
+const summy = sumGenerator('adder',[1,2,3,4]);
+summy.print();
+console.log(summy.generate());
+
+const mulGenerator = (lb,nums) => {
+    let state = {
+        id:2,
+        lb,
+        nums
+    };
+
+    return Object.assign({},label(state),mul(state));
+};
+
+const mully = mulGenerator('multiplier',[1,2,3,4]);
+mully.print();
+console.log(mully.generate());
