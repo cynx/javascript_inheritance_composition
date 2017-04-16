@@ -1,3 +1,5 @@
+// # pseudo classical inheritance
+//----------------------------------
 function Robot(name, type){
     this.name = name;
     this.type = type;
@@ -34,5 +36,95 @@ speechBot.private_hello();
 speechBot.public_hello();
 
 //demostrating psuedo classical inheritance
+//the 'new' keyword sets wheelBot's _proto_ to RobotAccessories's Prototype.
 var wheelBot = new RobotAccessories('wheely','wheelbot',true,false);
 wheelBot.printAccessories();
+
+// # prototypal inheritance
+//----------------------------------
+//different ways to initialize object variables
+
+//using init method
+var Employee = {
+    init:function(firstName,lastName){
+        this.firstName = firstName;
+        this.lastName = lastName;
+    },
+    printName: function(){
+        return this.firstName + ' ' + this.lastName;
+    }
+};
+
+//Ron _proto_ is set to Employee obj.
+var Ron = Object.create(Employee);
+Ron.init('Ron','Elloit');
+console.log(Ron.printName());
+
+
+//using Object.create 2nd param.
+var Employee2 = {
+    printName: function(){
+        return this.firstName + ' ' + this.lastName;
+    }
+};
+
+var Roy = Object.create(Employee2,{
+    firstName:{
+        value:'Roy'
+    },
+    lastName:{
+        value:'Roxie'
+    }
+});
+console.log(Roy.printName());
+
+//using factory functions
+var Employee3 = {
+    printName: function(){
+        return this.firstName + ' ' + this.lastName;
+    }
+};
+
+function EmployeeFactory(firstName,lastName){
+    var lee = Object.create(Employee3);
+    lee.firstName = firstName;
+    lee.lastName = lastName;
+    return lee;
+}
+
+var lee = EmployeeFactory('lee','hanx');
+console.log(lee.printName());
+
+//demostrate prototype chain of 3 objects
+var ParentObj = {
+    initParent:function(name){
+        this.parentName = name;
+    }
+};
+
+var ChildObj = Object.create(ParentObj,{
+    initChild:{
+        value:function(name){
+            this.childName = name;
+        }
+    }
+});
+
+var GrandchildObj = Object.create(ChildObj,{
+    initGranChild:{
+        value:function(name){
+            this.grandChildName = name;
+        }
+    },
+    printFullName:{
+        value:function(){
+            return `${this.grandChildName} ${this.childName} ${this.parentName}`;
+        }
+    }
+});
+
+GrandchildObj.initParent('VII');
+GrandchildObj.initChild('the King');
+GrandchildObj.initGranChild('Henry');
+
+console.log(GrandchildObj.printFullName());
