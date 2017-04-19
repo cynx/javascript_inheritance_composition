@@ -1,6 +1,6 @@
-// # pseudo classical inheritance
+// # pseudo classical inheritance (pre-ES6, prototypal inheritance)
 //----------------------------------
-function Robot(name, type){
+function Robot(name,type){
     this.name = name;
     this.type = type;
     this.private_hello = function(){
@@ -12,22 +12,29 @@ Robot.prototype.public_hello = function(){
     console.log(`${this.name} is of type ${this.type}`);
 };
 
-function RobotAccessories(name,type,wheels,wireless){
+function EnhancedRobot(name,type,wheels,wireless){
     Robot.call(this,name,type);
     this.wheels = wheels;
     this.wireless = wireless;
 }
 
-RobotAccessories.prototype.printAccessories = function(){
+EnhancedRobot.prototype.printAccessories = function(){
     console.log(`${this.name} has Wheels:${this.wheels?'Yes':'No'} and Wireless:${this.wireless?'Yes':'No'}`);
 };
 
-//using setPrototypeOf keeps the existing properties on child prototype retained.
-//using Object.create replaces child's prototype object
-//older way to Object.create is using new Keyword. which points _proto_ of child.prototype to Parent.prototype.
-Object.setPrototypeOf(RobotAccessories.prototype,Robot.prototype);
-//RobotAccessories.prototype = Object.create(Robot.prototype);
-//or can also use RobotAccessories.prototype = new Robot();
+//using setPrototypeOf (ES6) keeps the existing properties on child prototype retained.
+Object.setPrototypeOf(EnhancedRobot.prototype,Robot.prototype);
+
+//using Object.create (ES5.1) replaces child's prototype object.
+//requires fixing contructor reference.
+//EnhancedRobot.prototype = Object.create(Robot.prototype);
+//EnhancedRobot.prototype.constructor = EnhancedRobot;
+
+//older way to Object.create is using new keyword which also creates a new object with
+//_proto_ of child prototype pointing to parent prototype but has constructor side effects.
+//also requires fixing contructor reference.
+//EnhancedRobot.prototype = new Robot();
+//EnhancedRobot.prototype.constructor = EnhancedRobot;
 
 //demonstrating public vs private properties
 var speechBot = new Robot('talkie','speech');
@@ -36,8 +43,8 @@ speechBot.private_hello();
 speechBot.public_hello();
 
 //demostrating psuedo classical inheritance
-//the 'new' keyword sets wheelBot's _proto_ to RobotAccessories's Prototype.
-var wheelBot = new RobotAccessories('wheely','wheelbot',true,false);
+//the 'new' keyword sets wheelBot's _proto_ to EnhancedRobot's prototype.
+var wheelBot = new EnhancedRobot('wheely','wheelbot',true,false);
 wheelBot.printAccessories();
 
 // # prototypal inheritance
@@ -131,14 +138,14 @@ console.log(GrandchildObj.printFullName());
 
 
 
-// # ES6 Classes - extends
+// # pseudo classical inheritance (ES6, prototypal inheritance)
 //----------------------------------
 //typeof ParentClass - 'function'
 class ParentClass{
     constructor(parentName){
         this.parentName = parentName;
     }
-    printSurname(){
+    getSurname(){
         return this.parentName;
     }
 }
@@ -148,58 +155,73 @@ class ChildClass extends ParentClass{
         super(parentName);
         this.childName = childName;
     }
-    printFullName(){
+    getFullName(){
         return this.childName + ' ' + this.parentName;
     }
 }
 
-//ronny _proto_ is ChildCLass. ChildClass _proto_ is ParentClass
+//ronny _proto_ is ChildCLass.prototype.
+//ChildClass.prototype _proto_ is ParentClass.prototype.
+//ChildClass _proto_ is ParentClass (statics).
 var ronny = new ChildClass('Sax','Ash');
-console.log(ronny.printFullName());
-console.log(ronny.printSurname());
+console.log(ronny.getFullName());
+console.log(ronny.getSurname());
 
 
 // # Composition
 //----------------------------------
-// Inheritance - design around 'what they are' . Composition - design around 'what they do'.
-//https://medium.com/humans-create-software/composition-over-inheritance-cb6f88070205
-const label = (state) => ({
-    print: () => console.log(`${state.id}: This task is ${state.lb}`)
-});
+// Composition is a 'has a' relationship instead of an 'is a' with inheritance.
+// Compositional Inheritance is an interface implemented around a composed object
+// which alows for polymorphism with the parent instance.
 
-const sum = (state) => ({
-    generate: () => state.nums.reduce((a,b)=>a+b)
-});
+function Robot(name,type){
+    this.name = name;
+    this.type = type;
+    this.accessories = new RobotAccessories(name,true,false);
+}
 
-const mul = (state) => ({
-    generate: () => state.nums.reduce((a,b)=>a*b)
-});
-
-//usage
-const sumGenerator = (lb,nums) => {
-  let state = {
-      id:1,
-      lb,
-      nums
-  };
-
-  return Object.assign({},label(state),sum(state));
+Robot.prototype.public_hello = function(){
+    console.log(`${this.name} is of type ${this.type}`);
 };
 
-const summy = sumGenerator('adder',[1,2,3,4]);
-summy.print();
-console.log(summy.generate());
+function RobotAccessories(name,wheels,wireless){
+    this.name = name;
+    this.wheels = wheels;
+    this.wireless = wireless;
+}
 
-const mulGenerator = (lb,nums) => {
-    let state = {
-        id:2,
-        lb,
-        nums
-    };
-
-    return Object.assign({},label(state),mul(state));
+RobotAccessories.prototype.printAccessories = function(){
+    console.log(`${this.name} has Wheels:${this.wheels?'Yes':'No'} and Wireless:${this.wireless?'Yes':'No'}`);
 };
 
-const mully = mulGenerator('multiplier',[1,2,3,4]);
-mully.print();
-console.log(mully.generate());
+var speechBot = new Robot('talkie','speech');
+speechBot.public_hello();
+speechBot.accessories.printAccessories();
+
+function EnhancedRobot(name,type,wheels,wireless){
+    this.name = name;
+    this.type = type;
+    this.accessories = new RobotAccessories(name,wheels,wireless);
+}
+
+EnhancedRobot.prototype.public_hello = function(){
+    console.log(`${this.name} is of type ${this.type}`);
+};
+
+EnhancedRobot.prototype.printAccessories = function(){
+    return this.accessories.printAccessories();
+};
+
+function RobotAccessories(name,wheels,wireless){
+    this.name = name;
+    this.wheels = wheels;
+    this.wireless = wireless;
+}
+
+RobotAccessories.prototype.printAccessories = function(){
+    console.log(`${this.name} has Wheels:${this.wheels?'Yes':'No'} and Wireless:${this.wireless?'Yes':'No'}`);
+};
+
+var speechBot2 = new EnhancedRobot('talkie2','speech',false,true);
+speechBot2.public_hello();
+speechBot2.printAccessories();
